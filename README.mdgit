@@ -1,0 +1,2 @@
+"# fantacoach-ai"  initgit add README.mdgit commit -m "first commit"git branch -M maingit remote add origin https://github.com/seis97/fantacoach-ai.gitgit push -u origin main
+"# fantacoach-ai"  initgit add README.mdgit commit -m "first commit"git branch -M maingit remote add origin https://github.com/seis97/fantacoach-ai.gitgit push -u origin main
