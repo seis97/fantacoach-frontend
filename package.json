@@ -5,8 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && echo 'build finita'",
-
+  "build": "vite build && echo 'build finita'",
     "preview": "vite preview",
     "test:unit": "vitest",
     "test:e2e": "playwright test",
