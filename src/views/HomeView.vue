@@ -1,9 +1,9 @@
 <template>
   <section class="bg-gray-950 text-white min-h-screen">
     <!-- Navbar -->
-    <nav class="flex flex-col sm:flex-row sm:justify-between sm:items-center px-4 py-4 border-b border-gray-800 text-center sm:text-left gap-2 sm:gap-0">
+    <nav class="flex flex-col sm:flex-row sm:justify-between sm:items-center px-4 py-4 border-b border-gray-800 text-center sm:text-left">
       <div class="text-2xl font-bold text-white">FantaCoach AI ⚽</div>
-      <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-2 sm:space-y-0 items-center">
+      <div class="flex flex-wrap justify-center sm:justify-end gap-2 sm:gap-4 mt-2 sm:mt-0">
         <router-link to="/login" class="text-white hover:text-yellow-400">Login</router-link>
         <router-link to="/register" class="text-white hover:text-yellow-400">Registrati</router-link>
         <router-link
@@ -43,15 +43,21 @@
       <div class="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10 text-center">
         <div>
           <h3 class="text-xl sm:text-2xl font-bold mb-2 text-yellow-400">⚡ Formazioni AI</h3>
-          <p class="text-gray-400 text-sm sm:text-base">La formazione ottimale ogni giornata, calcolata con dati aggiornati e algoritmi intelligenti.</p>
+          <p class="text-gray-400 text-sm sm:text-base">
+            La formazione ottimale ogni giornata, calcolata con dati aggiornati e algoritmi intelligenti.
+          </p>
         </div>
         <div>
           <h3 class="text-xl sm:text-2xl font-bold mb-2 text-yellow-400">📊 Statistiche Live</h3>
-          <p class="text-gray-400 text-sm sm:text-base">Tutte le performance dei tuoi giocatori a portata di clic, in tempo reale.</p>
+          <p class="text-gray-400 text-sm sm:text-base">
+            Tutte le performance dei tuoi giocatori a portata di clic, in tempo reale.
+          </p>
         </div>
         <div>
           <h3 class="text-xl sm:text-2xl font-bold mb-2 text-yellow-400">🎯 Consigli Personalizzati</h3>
-          <p class="text-gray-400 text-sm sm:text-base">Suggerimenti su misura per la tua squadra, per avere sempre un vantaggio sugli avversari.</p>
+          <p class="text-gray-400 text-sm sm:text-base">
+            Suggerimenti su misura per la tua squadra, per avere sempre un vantaggio sugli avversari.
+          </p>
         </div>
       </div>
     </div>
