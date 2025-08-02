@@ -1,4 +1,3 @@
-
 <template>
   <section class="bg-gray-950 text-white min-h-screen">
     <!-- Navbar -->
@@ -76,8 +75,7 @@ const router = useRouter();
 
 const handleRegister = async () => {
   try {
-    const res = await fetch('http://localhost:3000/api/register', {
-
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: email.value, password: password.value })
@@ -86,29 +84,29 @@ const handleRegister = async () => {
     const data = await res.json();
 
     if (res.ok) {
-  successo.value = true;
-  errore.value = '';
+      successo.value = true;
+      errore.value = '';
 
-  // ✅ LOGIN automatico dopo registrazione
-  const loginRes = await fetch('/api/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: email.value, password: password.value })
-  });
+      // ✅ LOGIN automatico dopo registrazione
+      const loginRes = await fetch(`${import.meta.env.VITE_API_URL}/api/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.value, password: password.value })
+      });
 
-  const loginData = await loginRes.json();
+      const loginData = await loginRes.json();
 
-  if (loginRes.ok) {
-    localStorage.setItem('token', loginData.token);
-    localStorage.setItem('premium', loginData.premium);
-    router.push('/dashboard');
-  } else {
-    errore.value = 'Registrazione completata ma login fallito.';
-  }
+      if (loginRes.ok) {
+        localStorage.setItem('token', loginData.token);
+        localStorage.setItem('premium', loginData.premium);
+        router.push('/dashboard');
+      } else {
+        errore.value = 'Registrazione completata ma login fallito.';
+      }
 
-} else {
-  errore.value = data.errore;
-}
+    } else {
+      errore.value = data.errore;
+    }
 
   } catch (err) {
     errore.value = 'Errore di rete. Riprova.';
