@@ -1,3 +1,5 @@
+
+
 <template>
   <section class="bg-gray-950 text-white min-h-screen">
     <!-- Navbar -->
