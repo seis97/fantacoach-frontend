@@ -13,7 +13,7 @@
 
       <!-- Box funzionalità -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <router-link to="/formazione-ai" class="block bg-gray-900 p-6 rounded-lg border border-yellow-500 shadow-lg hover:scale-105 transition">
+        <router-link to="/formazionepreview" class="block bg-gray-900 p-6 rounded-lg border border-yellow-500 shadow-lg hover:scale-105 transition">
           <h2 class="text-xl font-semibold text-white-400 mb-2">⚙️ Genera Formazione AI</h2>
           <p class="text-gray-400 text-sm">Crea la formazione ideale basata sulle statistiche aggiornate.</p>
           <p class="mt-4 text-yellow-400 hover:underline">Vai alla funzione</p>

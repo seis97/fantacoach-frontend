@@ -6,8 +6,7 @@
     <nav class="flex justify-between items-center px-6 py-4 border-b border-gray-800">
       <div class="text-2xl font-bold text-white-400">FantaCoach AI ⚽</div>
       <div class="space-x-4">
-        <router-link to="/login" class="text-white hover:text-yellow-400">Login</router-link>
-        <router-link to="/register" class="text-white hover:text-yellow-400">Registrati</router-link>
+        <router-link to="/register" class="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 font-semibold">Registrati</router-link>
         <router-link to="/dashboard" class="bg-yellow-400 text-black px-4 py-2 rounded hover:bg-yellow-300 font-semibold">Entra ora</router-link>
       </div>
     </nav>

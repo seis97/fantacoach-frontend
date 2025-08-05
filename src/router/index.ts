@@ -6,6 +6,7 @@ import LoginView from '../views/LoginView.vue'
 import RegisterView from '../views/RegisterView.vue'
 import PremiumSuccessView from '../views/PremiumSuccessView.vue'
 import InserisciSquadraView from '../views/InserisciSquadraView.vue'
+import FormazionePreview from '../views/FormazionePreview.vue'
 
 const routes = [
   {
@@ -41,12 +42,12 @@ const routes = [
   {
     path: '/inserisci-squadra',
     name: 'InserisciSquadra',
-    component:InserisciSquadraView
+    component: InserisciSquadraView
   },
   {
-    path: '/formazione-ai',
-    name: 'FormazioneAI',
-    component: () => import('../views/FormazionePreview.vue')
+    path: '/formazionepreview',
+    name: 'FormazionePreview',
+    component: FormazionePreview
   }
 ]
 
@@ -56,4 +57,3 @@ const router = createRouter({
 })
 
 export default router
-

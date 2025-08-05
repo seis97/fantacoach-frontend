@@ -7,25 +7,47 @@
     </nav>
 
     <!-- Titolo -->
-    <div class="text-center p-8">
-      <h1 class="text-3xl font-bold text-yellow-400 mb-2">⚽ Inserisci la tua rosa ufficiale</h1>
-      <div v-if="isDev" class="text-yellow-400 text-sm mb-4">👨‍💻 DEV MODE ATTIVO (accesso forzato)</div>
-      <p class="text-gray-400 mb-6">Clicca sui ruoli per espandere le sezioni e inserire i tuoi giocatori.</p>
+    <div class="text-center p-6">
+      <h1 class="text-3xl font-bold text-yellow-400 mb-2">⚽ Gestione Rosa Fantacalcio</h1>
+      <p class="text-gray-400 mb-2">Puoi creare più rose e modificarle quando vuoi.</p>
     </div>
 
-    <!-- Nome Squadra -->
-    <div class="max-w-md mx-auto mb-10">
-      <label class="block text-yellow-400 text-sm font-semibold mb-2">📛 Nome Squadra</label>
-      <input
-        v-model="nomeSquadra"
-        type="text"
-        placeholder="Es. Real Pipponi"
-        class="w-full p-3 rounded bg-gray-800 text-white border border-yellow-500 focus:outline-none"
-      />
+    <!-- Gestione Rose -->
+    <div class="max-w-xl mx-auto space-y-4 mb-6 px-4">
+      <div>
+        <label class="block text-yellow-400 mb-2 font-semibold">📛 Nome Rosa</label>
+        <input
+          v-model="nomeSquadra"
+          type="text"
+          placeholder="Es. Real Pipponi"
+          class="w-full p-3 rounded bg-gray-800 text-white border border-yellow-500 focus:outline-none"
+        />
+      </div>
+
+      <div>
+        <label class="block text-gray-400 mb-2">📂 Rose Salvate</label>
+        <select
+          v-model="rosaSelezionata"
+          @change="caricaRosa"
+          class="w-full p-3 rounded bg-gray-900 text-white border border-gray-700"
+        >
+          <option disabled value="">— Seleziona una rosa salvata —</option>
+          <option v-for="rosa in roseSalvate" :key="rosa._id" :value="rosa._id">
+            {{ rosa.nomeSquadra }}
+          </option>
+        </select>
+      </div>
+
+      <button
+        @click="nuovaRosa"
+        class="bg-yellow-500 hover:bg-yellow-600 text-black font-bold px-4 py-2 rounded mt-2"
+      >
+        ➕ Nuova Rosa
+      </button>
     </div>
 
-    <!-- Sezioni ruoli disposte 2x2 -->
-    <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+    <!-- Sezioni Ruoli -->
+    <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 px-4">
       <div
         v-for="ruolo in ruoli"
         :key="ruolo.key"
@@ -39,39 +61,21 @@
           <span>{{ sezioneAttiva === ruolo.key ? '🔽' : '▶️' }}</span>
         </button>
 
-        <div v-if="sezioneAttiva === ruolo.key" class="text-sm text-gray-400 mt-2 mb-2">
-          Suggerimenti: {{ suggeriti[ruolo.key].join(', ') }}
-        </div>
-
         <div v-if="sezioneAttiva === ruolo.key" class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div v-for="(g, i) in giocatori[ruolo.key]" :key="i" class="relative">
-            <input
-              v-model="giocatori[ruolo.key][i]"
-              type="text"
+            <SearchGiocatore
               :placeholder="`${ruolo.labelSingolo} ${i + 1}`"
-              @input="filterGiocatori(ruolo.key, i)"
-              class="w-full p-2 rounded bg-gray-800 text-white border border-yellow-500 focus:outline-none"
+              :valore-iniziale="g?.nome || ''"
+              :role="ruolo.key === 'portieri' ? 'POR' : ruolo.key === 'difensori' ? 'DIF' : ruolo.key === 'centrocampisti' ? 'CEN' : 'ATT'"
+              @select="(player) => setGiocatore(ruolo.key, i, player)"
             />
-            <ul
-              v-if="suggestions[ruolo.key] && suggestions[ruolo.key][i]?.length"
-              class="absolute z-10 bg-gray-900 text-white border border-yellow-500 rounded mt-1 max-h-40 overflow-y-auto w-full"
-            >
-              <li
-                v-for="(s, j) in suggestions[ruolo.key][i]"
-                :key="j"
-                @click="selectSuggestion(ruolo.key, i, s)"
-                class="p-2 hover:bg-yellow-600 cursor-pointer"
-              >
-                {{ s }}
-              </li>
-            </ul>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Bottoni azioni -->
-    <div class="text-center mt-12 space-x-4">
+    <!-- Bottoni -->
+    <div class="text-center mt-8 space-x-4 px-4">
       <button
         @click="salvaRosa"
         class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded text-lg"
@@ -86,22 +90,9 @@
       </button>
     </div>
 
-    <!-- Messaggi -->
-    <div v-if="errore" class="text-red-500 text-center mt-4">{{ errore }}</div>
+    <div v-if="messaggio" class="text-center text-green-400 mt-4">{{ messaggio }}</div>
+    <div v-if="errore" class="text-center text-red-500 mt-2">{{ errore }}</div>
 
-    <div
-      v-if="formazione.length"
-      class="mt-6 bg-gray-900 p-6 rounded border border-yellow-400 max-w-xl mx-auto"
-    >
-      <h3 class="text-yellow-400 font-bold mb-2 text-lg">✅ Formazione Generata:</h3>
-      <ul class="list-disc list-inside text-white space-y-1">
-        <li v-for="(g, i) in formazione" :key="i">{{ g }}</li>
-      </ul>
-    </div>
-
-    <div v-if="messaggioSalvato" class="text-green-400 text-center mt-6">✅ Rosa salvata con successo!</div>
-
-    <!-- Footer -->
     <footer class="bg-gray-900 py-4 text-center border-t border-yellow-500 text-yellow-400 mt-16">
       © 2025 FantaCoach AI — Tutti i diritti riservati ⚽
     </footer>
@@ -111,8 +102,15 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import SearchGiocatore from '@/components/SearchGiocatore.vue'
 
 const router = useRouter()
+const nomeSquadra = ref('')
+const rosaSelezionata = ref('')
+const roseSalvate = ref<any[]>([])
+const sezioneAttiva = ref('')
+const messaggio = ref('')
+const errore = ref('')
 
 const ruoli = [
   { key: 'portieri', label: 'Portieri', labelSingolo: 'Portiere', count: 3, icon: '🧤' },
@@ -123,80 +121,56 @@ const ruoli = [
 
 type RuoloKey = typeof ruoli[number]['key']
 
-const nomeSquadra = ref('')
-const sezioneAttiva = ref('')
-const formazione = ref<string[]>([])
-const errore = ref('')
-const messaggioSalvato = ref('')
-const isPremium = ref(false)
-const isDev = ref(false)
-const DEV_EMAIL = 'premium@premium.com'
-const FREE_LIMIT = 2
-
-const suggeriti: Record<RuoloKey, string[]> = {
-  portieri: ['Maignan', 'Donnarumma', 'Szczesny'],
-  difensori: ['Di Lorenzo', 'Scalvini', 'Theo Hernandez', 'Bastoni', 'Buongiorno'],
-  centrocampisti: ['Locatelli', 'Barella', 'Frattesi', 'Zaccagni', 'Pellegrini'],
-  attaccanti: ['Chiesa', 'Retegui', 'Belotti', 'Immobile', 'Gnonto']
-}
-
-const giocatori = reactive<Record<RuoloKey, string[]>>({
-  portieri: Array(3).fill(''),
-  difensori: Array(8).fill(''),
-  centrocampisti: Array(8).fill(''),
-  attaccanti: Array(6).fill('')
+const giocatori = reactive<Record<RuoloKey, any[]>>({
+  portieri: Array(3).fill({ nome: '', ruolo: 'POR' }),
+  difensori: Array(8).fill({ nome: '', ruolo: 'DIF' }),
+  centrocampisti: Array(8).fill({ nome: '', ruolo: 'CEN' }),
+  attaccanti: Array(6).fill({ nome: '', ruolo: 'ATT' })
 })
 
-const suggestions = reactive<Record<RuoloKey, string[][]>>({
-  portieri: Array(3).fill([]),
-  difensori: Array(8).fill([]),
-  centrocampisti: Array(8).fill([]),
-  attaccanti: Array(6).fill([])
-})
-
-const tuttiIGiocatori = [
-  'Maignan', 'Donnarumma', 'Szczesny', 'Di Lorenzo', 'Scalvini', 'Theo Hernandez',
-  'Bastoni', 'Buongiorno', 'Locatelli', 'Barella', 'Frattesi', 'Zaccagni',
-  'Berardi', 'Chiesa', 'Retegui', 'Belotti', 'Immobile', 'Gnonto', 'Pellegrini'
-]
-
-const toggleSezione = (ruolo: RuoloKey) => {
+function toggleSezione(ruolo: RuoloKey) {
   sezioneAttiva.value = sezioneAttiva.value === ruolo ? '' : ruolo
 }
 
-const filterGiocatori = (ruolo: RuoloKey, index: number) => {
-  const query = giocatori[ruolo][index].toLowerCase()
-  suggestions[ruolo][index] = query
-    ? tuttiIGiocatori.filter(n => n.toLowerCase().includes(query) && !Object.values(giocatori).flat().includes(n)).slice(0, 5)
-    : []
+function setGiocatore(ruolo: RuoloKey, index: number, player: any) {
+  giocatori[ruolo][index] = { nome: player.nome, ruolo: player.ruolo }
 }
 
-const selectSuggestion = (ruolo: RuoloKey, index: number, nome: string) => {
-  giocatori[ruolo][index] = nome
-  suggestions[ruolo][index] = []
+function nuovaRosa() {
+  nomeSquadra.value = ''
+  rosaSelezionata.value = ''
+  ruoli.forEach(r => (giocatori[r.key] = Array(r.count).fill({ nome: '', ruolo: r.key.slice(0,3).toUpperCase() })))
 }
 
-const salvaRosa = async () => {
+async function salvaRosa() {
   errore.value = ''
-  messaggioSalvato.value = ''
+  messaggio.value = ''
 
-  if (!nomeSquadra.value.trim()) {
-    errore.value = '❗ Inserisci un nome per la tua squadra.'
-    return
-  }
+  const rosa = [
+    ...giocatori.portieri,
+    ...giocatori.difensori,
+    ...giocatori.centrocampisti,
+    ...giocatori.attaccanti
+  ]
 
   try {
-    const res = await fetch('http://localhost:3000/api/squadra', {
+    const res = await fetch('http://localhost:3000/api/rosa/save', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${localStorage.getItem('token')}`
       },
-      body: JSON.stringify({ nomeSquadra: nomeSquadra.value, giocatori })
+      body: JSON.stringify({
+        nomeSquadra: nomeSquadra.value,
+        modulo: '4-3-3',
+        titolari: rosa.slice(0, 11),
+        panchina: rosa.slice(11)
+      })
     })
     const data = await res.json()
     if (res.ok) {
-      messaggioSalvato.value = '✅ Rosa salvata con successo!'
+      messaggio.value = data.message || '✅ Rosa salvata con successo!'
+      await caricaTutteLeRose()
     } else {
       errore.value = data.errore || 'Errore nel salvataggio.'
     }
@@ -205,68 +179,35 @@ const salvaRosa = async () => {
   }
 }
 
-const generaFormazione = async () => {
-  errore.value = ''
-  formazione.value = []
-
-  const squadra = [...giocatori.portieri, ...giocatori.difensori, ...giocatori.centrocampisti, ...giocatori.attaccanti]
-
-  if (!nomeSquadra.value.trim()) {
-    errore.value = '❗ Inserisci un nome per la tua squadra.'
-    return
-  }
-  if (squadra.includes('')) {
-    errore.value = '🚫 Compila tutti i campi prima di generare la formazione.'
-    return
-  }
-
+async function caricaTutteLeRose() {
   try {
-    const res = await fetch('http://localhost:3000/api/formazione-ai', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('token')}`
-      },
-      body: JSON.stringify({ squadra, nomeSquadra: nomeSquadra.value })
+    const res = await fetch('http://localhost:3000/api/rosa/all', {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
     })
     const data = await res.json()
-    if (res.ok) {
-      formazione.value = data.formazione
-    } else {
-      errore.value = data.errore || 'Errore nella generazione.'
+    if (res.ok && data.success) {
+      roseSalvate.value = data.rose
     }
   } catch {
-    errore.value = 'Errore di rete.'
+    console.error('Errore nel recupero delle rose')
   }
 }
 
+function caricaRosa() {
+  const rosa = roseSalvate.value.find(r => r._id === rosaSelezionata.value)
+  if (!rosa) return
+  nomeSquadra.value = rosa.nomeSquadra
+  giocatori.portieri = rosa.titolari.concat(rosa.panchina).filter(g => g.ruolo === 'POR')
+  giocatori.difensori = rosa.titolari.concat(rosa.panchina).filter(g => g.ruolo === 'DIF')
+  giocatori.centrocampisti = rosa.titolari.concat(rosa.panchina).filter(g => g.ruolo === 'CEN')
+  giocatori.attaccanti = rosa.titolari.concat(rosa.panchina).filter(g => g.ruolo === 'ATT')
+}
+
+function generaFormazione() {
+  router.push('/formazionepreview')
+}
+
 onMounted(() => {
-  const token = localStorage.getItem('token')
-  if (!token) return router.push('/login')
-
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]))
-    const email = payload.email
-    const premium = payload.premium
-
-    isDev.value = email === DEV_EMAIL
-    isPremium.value = premium || isDev.value
-
-    if (!isPremium.value && !isDev.value) {
-      let freeUsages = parseInt(localStorage.getItem('freeUsages') || '')
-      if (!freeUsages && freeUsages !== 0) {
-        freeUsages = FREE_LIMIT
-      }
-      if (freeUsages > 0) {
-        freeUsages--
-        localStorage.setItem('freeUsages', freeUsages.toString())
-      } else {
-        return router.push('/premium')
-      }
-    }
-  } catch {
-    return router.push('/login')
-  }
+  caricaTutteLeRose()
 })
 </script>
-
