@@ -3,203 +3,366 @@
     <!-- Navbar -->
     <nav class="flex justify-between items-center px-6 py-4 bg-gray-900 border-b border-gray-800">
       <div class="text-2xl font-bold text-white">FantaCoach AI ⚽</div>
-      <router-link to="/dashboard" class="text-white hover:text-yellow-400">🔙 Dashboard</router-link>
+      <div class="flex items-center gap-3">
+        <router-link to="/inserisci-squadra" class="text-white hover:text-yellow-400">✏️ Modifica Rosa</router-link>
+        <router-link to="/dashboard" class="text-white hover:text-yellow-400">📊 Dashboard</router-link>
+      </div>
     </nav>
 
-    <!-- Titolo -->
-    <div class="text-center p-6">
-      <h1 class="text-3xl font-bold text-yellow-400">📋 Formazione Generata</h1>
-      <p class="text-gray-400 mt-2">Questa è la tua formazione ideale generata dall'intelligenza artificiale.</p>
-    </div>
+    <div class="px-6 py-5 max-w-6xl w-full mx-auto">
+      <!-- Banner prove gratuite -->
+      <div
+        v-if="!me?.premium && freeGenerationsLeft !== null"
+        class="bg-yellow-500 text-black rounded-xl p-4 mb-6 flex items-center justify-between"
+      >
+        <div class="font-semibold">
+          🎁 Prova gratuita: ti restano
+          <b>{{ freeGenerationsLeft }}</b>
+          {{ freeGenerationsLeft === 1 ? 'generazione' : 'generazioni' }}.
+        </div>
+        <button @click="goPremium" class="underline font-semibold">Vai a Premium →</button>
+      </div>
 
-    <!-- Bottone genera -->
-    <div class="text-center mb-4">
-      <button @click="generaFormazioneAI" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded text-lg">
-        🔮 Genera Formazione AI
-      </button>
-    </div>
-
-    <div v-if="errore" class="text-center text-red-500 mt-2">{{ errore }}</div>
-
-    <!-- Selezione rosa -->
-    <div class="p-4 text-white text-center">
-      <h2 class="text-xl font-semibold mb-2">🔽 Seleziona una delle tue rose</h2>
-      <select v-model="rosaSelezionata" @change="caricaRosa" class="bg-gray-900 border border-yellow-400 p-2 rounded text-white">
-        <option disabled value="">-- Scegli la tua rosa --</option>
-        <option v-for="r in roseDisponibili" :key="r._id" :value="r.nomeSquadra">{{ r.nomeSquadra }}</option>
-      </select>
-    </div>
-
-    <!-- Campo da calcio -->
-    <div class="flex flex-col md:flex-row gap-6 px-4 pb-10">
-      <!-- Campo -->
-      <div class="relative w-full md:w-3/4 aspect-[16/9] rounded-2xl shadow-xl overflow-hidden border border-yellow-400">
-        <img :src="campo" alt="Campo da calcio" class="absolute inset-0 w-full h-full object-cover" />
-
-        <!-- Giocatori sul campo -->
-        <div
-          v-for="(player, index) in formazione"
-          :key="index"
-          :style="getPositionStyle(modulo, index)"
-          class="absolute text-center text-xs md:text-sm font-bold bg-yellow-500 text-black rounded-full px-2 py-1 shadow-md whitespace-nowrap"
-        >
-          {{ player }}
+      <!-- Header -->
+      <div class="flex items-center justify-between mb-4">
+        <h1 class="text-2xl font-bold text-yellow-400">📋 Formazione</h1>
+        <div class="flex items-center gap-3">
+          <span class="text-sm text-gray-400">Modulo:</span>
+          <span class="px-3 py-1 rounded-full bg-gray-800 border border-gray-700 text-white font-semibold">
+            {{ modulo || '—' }}
+          </span>
         </div>
       </div>
 
-      <!-- Panchina -->
-      <div class="w-full md:w-1/4 bg-gray-900 p-4 rounded-xl shadow-xl">
-        <h2 class="text-lg font-semibold mb-2 text-yellow-400">Panchina</h2>
-        <ul class="space-y-2">
-          <li v-for="(p, i) in panchina" :key="i" class="bg-gray-800 p-2 rounded-md text-sm truncate">
-            {{ p }}
-          </li>
-        </ul>
+      <!-- Campo da calcio -->
+      <div class="w-full flex justify-center mb-6">
+        <div class="relative w-full max-w-5xl aspect-[3/2] rounded-2xl overflow-hidden ring-2 ring-white/60">
+          <!-- prato con strisce -->
+          <div class="absolute inset-0" :style="pitchBg"></div>
+
+          <!-- linee del campo -->
+          <div class="absolute inset-3 rounded-2xl border-4 border-white/70"></div>
+          <!-- cerchio centrocampo -->
+          <div
+            class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-white/70"
+            style="width: 180px; height: 180px;"
+          ></div>
+          <!-- dischetto centrocampo -->
+          <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-white rounded-full"></div>
+          <!-- area piccola + rigore + area grande (porta in basso) -->
+          <div class="absolute left-1/2 bottom-3 -translate-x-1/2 w-[220px] h-[60px] border-4 border-white/70"></div>
+          <div class="absolute left-1/2 bottom-3 -translate-x-1/2 w-[360px] h-[120px] border-4 border-white/70"></div>
+          <div class="absolute left-1/2 bottom-[130px] -translate-x-1/2 w-2 h-2 bg-white rounded-full"></div>
+          <!-- specchiate in alto -->
+          <div class="absolute left-1/2 top-3 -translate-x-1/2 w-[220px] h-[60px] border-4 border-white/70"></div>
+          <div class="absolute left-1/2 top-3 -translate-x-1/2 w-[360px] h-[120px] border-4 border-white/70"></div>
+          <div class="absolute left-1/2 top-[130px] -translate-x-1/2 w-2 h-2 bg-white rounded-full"></div>
+
+          <!-- Righe giocatori: ATT (alto), CEN, DIF, POR (basso) -->
+          <div class="absolute left-0 right-0" :style="{ top: rows.attY }">
+            <div class="flex justify-center gap-3 px-3 flex-wrap">
+              <div
+                v-for="(n, i) in att"
+                :key="'att-'+i"
+                class="px-3 py-1 rounded-full shadow-md border font-semibold text-sm
+                       bg-gray-800 text-white border-gray-700"
+              >
+                {{ n }}
+              </div>
+            </div>
+          </div>
+
+          <div class="absolute left-0 right-0" :style="{ top: rows.midY }">
+            <div class="flex justify-center gap-3 px-3 flex-wrap">
+              <div
+                v-for="(n, i) in mid"
+                :key="'mid-'+i"
+                class="px-3 py-1 rounded-full shadow-md border font-semibold text-sm
+                       bg-gray-800 text-white border-gray-700"
+              >
+                {{ n }}
+              </div>
+            </div>
+          </div>
+
+          <div class="absolute left-0 right-0" :style="{ top: rows.defY }">
+            <div class="flex justify-center gap-3 px-3 flex-wrap">
+              <div
+                v-for="(n, i) in def"
+                :key="'def-'+i"
+                class="px-3 py-1 rounded-full shadow-md border font-semibold text-sm
+                       bg-gray-800 text-white border-gray-700"
+              >
+                {{ n }}
+              </div>
+            </div>
+          </div>
+
+          <div class="absolute left-0 right-0" :style="{ top: rows.gkY }">
+            <div class="flex justify-center px-3">
+              <div
+                v-for="(n, i) in gk"
+                :key="'gk-'+i"
+                class="px-3 py-1 rounded-full shadow-md border font-semibold text-sm
+                       bg-yellow-500 text-black border-yellow-400"
+              >
+                {{ n }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Liste (fallback/ricontrollo) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-gray-900 rounded-xl border border-gray-800 p-4">
+          <h2 class="text-lg font-bold mb-3">🟡 Titolari</h2>
+          <ul class="space-y-2 list-disc list-inside">
+            <li v-for="(n, i) in titolari" :key="'tit-' + i" class="text-gray-100">
+              {{ n }}
+            </li>
+            <li v-if="!titolari.length" class="text-gray-400">Nessun titolare disponibile.</li>
+          </ul>
+        </div>
+
+        <div class="bg-gray-900 rounded-xl border border-gray-800 p-4">
+          <h2 class="text-lg font-bold mb-3">⚫ Panchina</h2>
+          <ul class="space-y-2 list-disc list-inside">
+            <li v-for="(n, i) in panchina" :key="'pan-' + i" class="text-gray-300">
+              {{ n }}
+            </li>
+            <li v-if="!panchina.length" class="text-gray-400">Nessuna panchina disponibile.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Azioni -->
+      <div class="flex flex-wrap items-center gap-3 mt-6">
+        <button
+          @click="rigenera"
+          :disabled="loading || (!me?.premium && (freeGenerationsLeft ?? 0) <= 0) || !rosaId"
+          class="bg-green-500 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed
+                 text-white font-semibold px-5 py-3 rounded-xl"
+        >
+          <span v-if="loading">⏳ Rigenerazione…</span>
+          <span v-else>🔄 Rigenera Formazione</span>
+        </button>
+
+        <button
+          @click="goPremium"
+          class="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold px-5 py-3 rounded-2xl"
+        >
+          ⭐ Passa a Premium
+        </button>
       </div>
     </div>
 
-    <footer class="bg-gray-900 py-4 text-center border-t border-yellow-500 text-yellow-400 mt-auto">
+    <!-- MODAL limite raggiunto -->
+    <div v-if="limitModalOpen" class="fixed inset-0 z-50 flex items-center justify-center">
+      <div class="absolute inset-0 bg-black/70" @click="limitModalOpen=false"></div>
+      <div class="relative bg-gray-900 border border-yellow-500 rounded-2xl p-6 w-[95%] max-w-md shadow-xl">
+        <h3 class="text-xl font-bold text-yellow-400 mb-2">Hai finito le generazioni gratuite</h3>
+        <p class="text-gray-300 mb-5">
+          Per continuare a generare la formazione, passa al <b>Premium</b>.
+        </p>
+        <div class="flex gap-3 justify-end">
+          <button
+            @click="limitModalOpen=false"
+            class="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg"
+          >Annulla</button>
+          <button
+            @click="goPremium"
+            class="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold px-4 py-2 rounded-lg"
+          >Vai a Premium →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-auto bg-gray-900 py-4 text-center border-t border-yellow-500 text-gray-400 text-sm">
       © 2025 FantaCoach AI — Tutti i diritti riservati ⚽
     </footer>
   </section>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import campo from '@/assets/campo.jpg'
+import { ref, onMounted, computed, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 
 const router = useRouter()
-const rosaSelezionata = ref('')
-const roseDisponibili = ref([])
-const modulo = ref('')
-const formazione = ref<string[]>([])
+const route = useRoute()
+
+// Usa proxy Vite? metti '' e chiama /api/...
+const BASE = (import.meta as any).env?.VITE_API_URL || 'http://localhost:3000'
+const api = (p: string) => `${BASE.replace(/\/$/, '')}${p}`
+const authHeader = () => ({ Authorization: `Bearer ${localStorage.getItem('token') || ''}` })
+
+// Stato utente / prove
+const me = ref<any>(null)
+const freeGenerationsLeft = ref<number | null>(null)
+
+// Dati formazione
+const modulo = ref<string>('4-3-3')
+const titolari = ref<string[]>([])
 const panchina = ref<string[]>([])
-const errore = ref('')
+const rosaId = ref<string>('')
 
-// Mappa posizioni
-const moduli = {
-  '4-3-3': [
-    { top: '90%', left: '50%' },
-    { top: '70%', left: '15%' },
-    { top: '70%', left: '35%' },
-    { top: '70%', left: '65%' },
-    { top: '70%', left: '85%' },
-    { top: '50%', left: '25%' },
-    { top: '50%', left: '50%' },
-    { top: '50%', left: '75%' },
-    { top: '30%', left: '20%' },
-    { top: '25%', left: '50%' },
-    { top: '30%', left: '80%' },
-  ],
-  '4-4-2': [
-    { top: '90%', left: '50%' },
-    { top: '70%', left: '15%' },
-    { top: '70%', left: '35%' },
-    { top: '70%', left: '65%' },
-    { top: '70%', left: '85%' },
-    { top: '50%', left: '20%' },
-    { top: '50%', left: '40%' },
-    { top: '50%', left: '60%' },
-    { top: '50%', left: '80%' },
-    { top: '25%', left: '40%' },
-    { top: '25%', left: '60%' },
-  ],
+const loading = ref(false)
+const limitModalOpen = ref(false)
+
+// Pitch background (strisce)
+const pitchBg = computed(() => ({
+  background: 'repeating-linear-gradient(90deg, #166534, #166534 24px, #15803d 24px, #15803d 48px)'
+}))
+
+const rows = {
+  attY: '12%',  // linea attaccanti (alto)
+  midY: '34%',
+  defY: '62%',
+  gkY:  '84%'
 }
 
-function getPositionStyle(moduloStr: string, index: number) {
-  const positions = moduli[moduloStr]
-  if (!positions || !positions[index]) return { display: 'none' }
-  return {
-    position: 'absolute',
-    transform: 'translate(-50%, -50%)',
-    ...positions[index],
+// Parse modulo "4-3-3" -> [4,3,3]
+function parseModulo(m: string): [number, number, number] {
+  const parts = String(m || '').split('-').map(x => parseInt(x.trim(), 10)).filter(x => !isNaN(x))
+  if (parts.length === 3) return [parts[0], parts[1], parts[2]]
+  return [4, 3, 3]
+}
+
+// Suddividi i titolari assumendo: 1 GK, poi D, M, A
+const gk = ref<string[]>([])
+const def = ref<string[]>([])
+const mid = ref<string[]>([])
+const att = ref<string[]>([])
+
+function splitByModule() {
+  const [d, m, a] = parseModulo(modulo.value)
+  const arr = Array.isArray(titolari.value) ? titolari.value.slice() : []
+  if (!arr.length) { gk.value = []; def.value = []; mid.value = []; att.value = []; return }
+
+  const hasGk = arr.length >= 1
+  gk.value = hasGk ? [arr[0]] : []
+  let idx = hasGk ? 1 : 0
+
+  def.value = arr.slice(idx, idx + d); idx += d
+  mid.value = arr.slice(idx, idx + m); idx += m
+  att.value = arr.slice(idx, idx + a)
+}
+
+watch([titolari, modulo], splitByModule, { deep: true })
+
+const goPremium = () => router.push('/premium')
+
+async function loadMe() {
+  try {
+    const r = await fetch(api('/api/me'), { headers: { ...authHeader() } })
+    const d = await r.json()
+    if (d?.success) {
+      me.value = d.me
+      freeGenerationsLeft.value = d.freeGenerationsLeft
+    }
+  } catch (e) {
+    console.error('me error', e)
   }
 }
 
-// Caricamento rose utente
-// Caricamento rose utente
-onMounted(async () => {
-  const token = localStorage.getItem('token')
-  if (!token) return router.push('/login')
-
-  try {
-    const res = await fetch('http://localhost:3000/api/rosa/all', {
-      headers: {
-        Authorization: `Bearer ${token}`
+async function loadInitialRosa() {
+  // 1) prova a leggere da query/params
+  const qid = (route.query.id as string) || (route.params as any).id || ''
+  if (qid) {
+    rosaId.value = qid
+  } else {
+    // 2) prendi l'ultima rosa aggiornata
+    try {
+      const res = await fetch(api('/api/rosa/all'), { headers: { ...authHeader() } })
+      const d = await res.json()
+      if (res.ok && d?.success && Array.isArray(d.rose) && d.rose.length) {
+        const r = d.rose[0]
+        rosaId.value = r._id
+        // Mostra già l'ultima formazione salvata
+        modulo.value = r.modulo || modulo.value
+        titolari.value = Array.isArray(r.titolari) ? r.titolari : []
+        panchina.value = Array.isArray(r.panchina) ? r.panchina : []
       }
-    })
-    const data = await res.json()
-    if (data.success) {
-      roseDisponibili.value = data.rose
-    } else {
-      errore.value = '⚠️ Nessuna rosa trovata.'
+    } catch (e) {
+      console.error('load all roses error', e)
     }
-  } catch {
-    errore.value = 'Errore di rete.'
   }
-})
 
-
-// Carica la rosa selezionata
-const caricaRosa = async () => {
-  const token = localStorage.getItem('token')
-  if (!token || !rosaSelezionata.value) return
-
-  try {
-    const res = await fetch(`http://localhost:3000/api/rosa/me?nomeRosa=${encodeURIComponent(rosaSelezionata.value)}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-    const data = await res.json()
-    if (data.success) {
-      modulo.value = data.rosa.modulo
-      formazione.value = data.rosa.titolari
-      panchina.value = data.rosa.panchina
-    } else {
-      errore.value = data.errore || 'Errore caricamento rosa.'
-    }
-  } catch {
-    errore.value = 'Errore rete nel caricamento rosa.'
+  // Se abbiamo un id ma nessuna lista caricata, prova a fetchare la singola rosa dalla lista
+  if (rosaId.value && titolari.value.length === 0 && panchina.value.length === 0) {
+    try {
+      const res = await fetch(api('/api/rosa/all'), { headers: { ...authHeader() } })
+      const d = await res.json()
+      if (res.ok && d?.success && Array.isArray(d.rose)) {
+        const found = d.rose.find((x: any) => String(x._id) === String(rosaId.value))
+        if (found) {
+          modulo.value = found.modulo || modulo.value
+          titolari.value = Array.isArray(found.titolari) ? found.titolari : []
+          panchina.value = Array.isArray(found.panchina) ? found.panchina : []
+        }
+      }
+    } catch (e) { /* ignore */ }
   }
+
+  splitByModule()
 }
 
-// Genera la formazione AI
-async function generaFormazioneAI() {
-  errore.value = ''
-  try {
-    const token = localStorage.getItem('token')
-    if (!token) return router.push('/login')
+async function rigenera() {
+  if (!rosaId.value) {
+    alert('Rosa non trovata.')
+    return
+  }
 
-    const res = await fetch('http://localhost:3000/api/formazionepreview', {
+  // Pre-blocco UX: se non premium e finite → apri modal
+  if (!me.value?.premium && (freeGenerationsLeft.value ?? 0) <= 0) {
+    limitModalOpen.value = true
+    return
+  }
+
+  loading.value = true
+  try {
+    const res = await fetch(api(`/api/rosa/formazione/genera/${rosaId.value}`), {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ squadra: [...formazione.value, ...panchina.value] }),
+      headers: { 'Content-Type': 'application/json', ...authHeader() },
+      body: JSON.stringify({})
     })
+
+    if (res.status === 402) {
+      // backend: { errore:'FREE_LIMIT_REACHED', redirect:'/premium' }
+      limitModalOpen.value = true
+      return
+    }
+
     const data = await res.json()
 
-    if (res.ok) {
-      formazione.value = data.formazione
-      // opzionalmente aggiorna anche il modulo
-      modulo.value = '4-3-3' // ← se vuoi modificarlo dinamicamente
+    if (res.ok && data?.success) {
+      modulo.value = data.modulo || modulo.value
+      titolari.value = Array.isArray(data.titolari) ? data.titolari : []
+      panchina.value = Array.isArray(data.panchina) ? data.panchina : []
+      splitByModule()
+
+      // Aggiorna contatore prove (se non premium)
+      if (typeof data.freeGenerationsLeft !== 'undefined' && data.freeGenerationsLeft !== null) {
+        freeGenerationsLeft.value = data.freeGenerationsLeft
+      }
     } else {
-      errore.value = data.errore || 'Errore generazione formazione.'
+      alert(data?.errore || 'Errore nella rigenerazione')
     }
-  } catch {
-    errore.value = 'Errore rete nella generazione.'
+  } catch (e) {
+    console.error('rigenera error', e)
+    alert('Errore di connessione al server')
+  } finally {
+    loading.value = false
   }
 }
+
+onMounted(async () => {
+  await loadMe()
+  await loadInitialRosa()
+})
 </script>
 
 <style scoped>
-@media (max-width: 640px) {
-  .truncate {
-    max-width: 100px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-}
+/* Usiamo Tailwind per quasi tutto */
 </style>

@@ -1,117 +1,111 @@
 <template>
-  <div class="min-h-screen bg-gray-950 text-white flex flex-col">
-    <!-- Navbar -->
-    <nav class="flex justify-between items-center px-6 py-4 border-b border-yellow-500 bg-gray-900">
-      <div class="text-2xl font-bold text-white">FantaCoach AI ⚽</div>
-      <div class="space-x-4">
-        <router-link to="/dashboard" class="text-white hover:text-yellow-400">Dashboard</router-link>
-        <router-link to="/premium" class="text-yellow-400 font-semibold">Premium</router-link>
-        <button @click="logout" class="text-red-400 hover:text-red-600">Logout</button>
-      </div>
-    </nav>
+  <div class="min-h-screen flex flex-col items-center justify-between bg-gray-900 text-white p-6">
 
-    <!-- Banner scorrevole -->
-    <div class="overflow-hidden bg-yellow-500 text-black py-2">
-      <div class="whitespace-nowrap animate-marquee text-md font-semibold">
-        🎁 Solo per i primi 50 utenti: Premium in offerta a 4,99€! Affrettati! 🎁
+    <!-- Barra promo fissa -->
+    <div class="w-full bg-yellow-500 text-black font-bold py-2 text-center mb-6 rounded-lg shadow-md">
+      🎉 Solo per i primi 50 utenti: Premium a Vita a 4,99€ per sempre! 🎉
+    </div>
+
+    <!-- Pulsanti navigazione -->
+    <div class="flex space-x-4 mb-6">
+      <button 
+        @click="goHome"
+        class="bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-xl transition">
+        🏠 Home
+      </button>
+      <button 
+        @click="goDashboard"
+        class="bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-xl transition">
+        📊 Dashboard
+      </button>
+    </div>
+
+    <h1 class="text-3xl font-bold mb-8 text-center">Passa a Premium</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl">
+      <!-- Card Premium Lifetime -->
+      <div class="bg-gray-800 rounded-2xl shadow-lg p-6 flex flex-col items-center justify-between">
+        <h2 class="text-2xl font-bold mb-4">Premium a Vita</h2>
+        <p class="text-4xl font-extrabold mb-4">€4,99</p>
+        <p class="text-gray-300 mb-6">Un unico pagamento per sempre.</p>
+        <button 
+          @click="checkoutLifetime"
+          class="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold py-3 px-6 rounded-xl transition">
+          Attiva Premium a Vita
+        </button>
+      </div>
+
+      <!-- Card Premium Mensile -->
+      <div class="bg-gray-800 rounded-2xl shadow-lg p-6 flex flex-col items-center justify-between">
+        <h2 class="text-2xl font-bold mb-4">Premium Mensile</h2>
+        <p class="text-4xl font-extrabold mb-4">€1,99 <span class="text-lg">/mese</span></p>
+        <p class="text-gray-300 mb-6">Paghi solo quando ti serve.</p>
+        <button 
+          @click="checkoutMonthly"
+          class="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold py-3 px-6 rounded-xl transition">
+          Attiva Premium Mensile
+        </button>
       </div>
     </div>
 
-    <!-- Contenuto -->
-    <main class="flex-1 flex flex-col justify-center items-center px-6 py-16">
-      <div class="bg-gray-900 p-10 rounded-xl shadow-lg border border-yellow-500 w-full max-w-2xl text-center">
-        <h1 class="text-4xl font-bold text-yellow-400 mb-4">💎 Passa a Premium</h1>
-        <p class="text-gray-300 mb-6 text-lg">Sblocca tutte le funzionalità avanzate:</p>
-        <ul class="text-left text-yellow-300 space-y-2 text-md mb-6">
-          <li>⚡ Formazioni AI avanzate</li>
-          <li>📊 Statistiche dettagliate</li>
-          <li>🧠 Consigli su misura</li>
-          <li>🔓 Accesso completo senza limiti</li>
-        </ul>
-        <button
-          @click="vaiAStripe"
-          class="bg-yellow-500 text-black px-6 py-3 rounded-lg font-semibold hover:bg-yellow-400 transition"
-        >
-          🔥 Attiva Premium a 4,99€
-        </button>
-      </div>
-    </main>
-
     <!-- Footer -->
-    <footer class="py-4 text-center border-t border-yellow-500 text-yellow-400">
+    <footer class="mt-12 text-gray-400 text-sm text-center">
       © 2025 FantaCoach AI — Tutti i diritti riservati ⚽
     </footer>
   </div>
 </template>
 
-<script setup lang="ts">
-import { onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+<script setup>
+import { useRouter } from 'vue-router'
 
-const router = useRouter();
-const DEV_EMAIL = 'premium@premium.com'; // 👈 CAMBIA CON LA TUA EMAIL DEV
+const router = useRouter()
+const API_URL = "http://localhost:3000"  // 👉 cambia con dominio backend in produzione
 
-onMounted(() => {
-  const token = localStorage.getItem('token');
-  if (!token) {
-    router.push('/login');
-    return;
-  }
+// Navigazione
+const goHome = () => {
+  router.push("/")       // route Home
+}
+const goDashboard = () => {
+  router.push("/dashboard")  // route Dashboard
+}
 
+// Checkout Lifetime
+const checkoutLifetime = async () => {
   try {
-    const payload = JSON.parse(atob(token.split('.')[1])); // Decodifica JWT
-    const email = payload.email;
-    const premium = payload.premium;
-
-    const isDev = email === DEV_EMAIL;
-
-    if (premium || isDev) {
-      router.push('/dashboard'); // 🔁 Vai alla dashboard se sei Premium o Dev
-    }
-  } catch (err) {
-    console.error('Token non valido', err);
-    router.push('/login');
-  }
-});
-
-const logout = () => {
-  localStorage.removeItem('token');
-  localStorage.removeItem('premium');
-  router.push('/login');
-};
-
-const vaiAStripe = async () => {
-  try {
-    const token = localStorage.getItem('token');
-    const res = await fetch('/api/create-checkout-session', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      }
-    });
-
-    const data = await res.json();
-    if (res.ok && data.url) {
-      window.location.href = data.url;
+    const res = await fetch(`${API_URL}/api/checkout/lifetime`, {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+    })
+    const data = await res.json()
+    if (data.url) {
+      window.location.href = data.url
     } else {
-      alert('Errore durante il checkout');
+      console.error("❌ Errore checkout Lifetime:", data)
+      alert("Errore nel checkout Premium a Vita")
     }
   } catch (err) {
-    console.error(err);
-    alert('Errore di rete');
+    console.error("❌ Errore rete Lifetime:", err)
+    alert("Errore di connessione al server")
   }
-};
+}
+
+// Checkout Mensile
+const checkoutMonthly = async () => {
+  try {
+    const res = await fetch(`${API_URL}/api/checkout/monthly`, {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+    })
+    const data = await res.json()
+    if (data.url) {
+      window.location.href = data.url
+    } else {
+      console.error("❌ Errore checkout Mensile:", data)
+      alert("Errore nel checkout Premium Mensile")
+    }
+  } catch (err) {
+    console.error("❌ Errore rete Mensile:", err)
+    alert("Errore di connessione al server")
+  }
+}
 </script>
-
-<style scoped>
-@keyframes marquee {
-  0% { transform: translateX(100%); }
-  100% { transform: translateX(-100%); }
-}
-
-.animate-marquee {
-  display: inline-block;
-  animation: marquee 15s linear infinite;
-}
-</style>

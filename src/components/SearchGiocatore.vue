@@ -1,81 +1,105 @@
 <template>
-  <div class="relative w-full">
-    <!-- Campo di ricerca -->
+  <div class="relative">
     <input
+      type="text"
       v-model="query"
-      @input="cercaGiocatore"
-      :placeholder="placeholder || 'Cerca giocatore...'"
-      class="w-full p-2 border border-yellow-400 bg-gray-900 text-white rounded"
+      :placeholder="placeholder"
+      class="w-full p-2 rounded bg-gray-800 text-white border border-gray-600 focus:border-yellow-500 outline-none"
+      @input="onInput"
     />
 
     <!-- Lista suggerimenti -->
     <ul
-      v-if="suggestions.length > 0 && query"
-      class="absolute z-10 w-full bg-gray-800 border border-yellow-400 rounded mt-1 max-h-60 overflow-y-auto"
+      v-if="showSuggestions && suggestions.length"
+      class="absolute w-full bg-gray-900 border border-gray-700 rounded mt-1 z-50 max-h-60 overflow-y-auto"
     >
       <li
         v-for="(player, index) in suggestions"
         :key="index"
-        @click="selezionaGiocatore(player)"
-        class="p-2 hover:bg-yellow-500 hover:text-black cursor-pointer"
+        @click="selectPlayer(player)"
+        class="px-3 py-2 hover:bg-yellow-500 hover:text-black cursor-pointer"
       >
-        ⚽ {{ player.nome }} — {{ player.ruolo }} ({{ player.squadra }})
+        {{ player.nome }} <span class="text-gray-400">({{ player.squadra }} - {{ player.ruolo }})</span>
       </li>
     </ul>
+
+    <!-- Nessun risultato -->
+    <div
+      v-if="showSuggestions && !suggestions.length && query.length >= 2"
+      class="absolute w-full bg-gray-900 border border-gray-700 rounded mt-1 z-50 p-2 text-gray-400 text-sm"
+    >
+      Nessun giocatore trovato
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 
 const props = defineProps({
   placeholder: String,
   valoreIniziale: String,
-  role: String // "POR", "DIF", "CEN", "ATT"
+  role: String
 })
+
 const emit = defineEmits(['select'])
 
 const query = ref(props.valoreIniziale || '')
 const suggestions = ref([])
+const showSuggestions = ref(false)
+let debounceTimeout = null
 
-async function cercaGiocatore() {
-  if (query.value.length < 2) {
+function onInput() {
+  clearTimeout(debounceTimeout)
+  if (query.value.trim().length < 2) {
     suggestions.value = []
+    showSuggestions.value = false
     return
   }
+  debounceTimeout = setTimeout(searchPlayers, 400)
+}
 
-  const token = localStorage.getItem('token')
-  if (!token) {
-    console.warn("⚠️ Nessun token trovato. L'utente non è loggato.")
-    return
-  }
-
+async function searchPlayers() {
   try {
-    const url = `http://localhost:3000/api/search-player?query=${encodeURIComponent(query.value)}&role=${props.role}`
-    console.log("🌍 [Frontend] Chiamata API:", url)
+    const token = localStorage.getItem('token')
+    if (!token) return
 
-    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } })
-    console.log("📡 [Frontend] Status:", res.status)
+    const res = await fetch(
+      `${import.meta.env.VITE_API_URL}/api/search-player?query=${encodeURIComponent(query.value)}&role=${props.role || ''}`,
+      {
+        headers: { Authorization: `Bearer ${token}` }
+      }
+    )
 
     const data = await res.json()
-    console.log("📦 [Frontend] Risposta:", data)
-
-    suggestions.value = data.success ? data.players : []
+    if (data.success) {
+      suggestions.value = data.players || []
+      showSuggestions.value = true
+    } else {
+      suggestions.value = []
+      showSuggestions.value = true
+    }
   } catch (err) {
-    console.error("❌ Errore fetch giocatori:", err)
+    console.error('Errore ricerca giocatori:', err)
     suggestions.value = []
+    showSuggestions.value = true
   }
 }
 
-function selezionaGiocatore(player) {
-  emit('select', { nome: player.nome, ruolo: player.ruolo }) // passa oggetto al genitore
-  query.value = player.nome // mostra solo il nome
-  suggestions.value = [] // chiude lista
+function selectPlayer(player) {
+  query.value = player.nome
+  showSuggestions.value = false
+  emit('select', player)
 }
-
-onMounted(() => {
-  if (props.valoreIniziale) {
-    query.value = props.valoreIniziale
-  }
-})
 </script>
+
+<style scoped>
+/* Scrollbar sottile */
+ul::-webkit-scrollbar {
+  width: 6px;
+}
+ul::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 4px;
+}
+</style>
