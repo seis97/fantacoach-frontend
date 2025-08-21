@@ -42,16 +42,17 @@ const login = async () => {
   errore.value = '';
 
   try {
-    const response = await fetch(`${API}/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        email: email.value,
-        password: password.value
-      })
-    });
+    cconst response = await fetch(`${API}/users/login`, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    email: email.value,
+    password: password.value
+  })
+});
+
 
     const data = await response.json();
 
