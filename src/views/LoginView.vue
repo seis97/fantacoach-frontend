@@ -42,7 +42,7 @@ const login = async () => {
   errore.value = '';
 
   try {
-    cconst response = await fetch(`${API}/users/login`, {
+    const response = await fetch(`${API}/users/login`, {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json'
