@@ -1,111 +1,117 @@
+<script setup lang="ts">
+import { ref } from "vue";
+import axios from "axios";
+
+const API = "https://fantacoach-backend.onrender.com";
+const loading = ref<"none" | "monthly" | "lifetime">("none");
+
+function getToken(): string | null {
+  return localStorage.getItem("token");
+}
+
+function isStandalonePWA(): boolean {
+  return (
+    window.matchMedia?.("(display-mode: standalone)")?.matches ||
+    (window.navigator as any).standalone === true
+  );
+}
+
+async function goToStripe(path: "/api/checkout/monthly" | "/api/checkout/lifetime") {
+  const token = getToken();
+  if (!token) {
+    alert("Devi effettuare l'accesso per procedere all'acquisto.");
+    return;
+  }
+  try {
+    const { data } = await axios.post(
+      `${API}${path}`,
+      {},
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!data?.url) {
+      throw new Error("URL di checkout non ricevuto dal server.");
+    }
+
+    if (isStandalonePWA()) {
+      window.location.href = data.url;
+    } else {
+      window.location.assign(data.url);
+    }
+  } catch (err: any) {
+    console.error("Checkout error:", err);
+    const msg =
+      err?.response?.data?.error ||
+      err?.response?.data?.errore ||
+      err?.message ||
+      "Errore di connessione durante il checkout.";
+    alert(msg);
+  } finally {
+    loading.value = "none";
+  }
+}
+
+async function goMonthly() {
+  if (loading.value !== "none") return;
+  loading.value = "monthly";
+  await goToStripe("/api/checkout/monthly");
+}
+
+async function goLifetime() {
+  if (loading.value !== "none") return;
+  loading.value = "lifetime";
+  await goToStripe("/api/checkout/lifetime");
+}
+</script>
+
 <template>
-  <div class="min-h-screen flex flex-col items-center justify-between bg-gray-900 text-white p-6">
+  <div class="premium">
+    <h1>Diventa Premium</h1>
+    <p>Sblocca tutte le funzionalità di FantaCoach AI senza limiti 🚀</p>
 
-    <!-- Barra promo fissa -->
-    <div class="w-full bg-yellow-500 text-black font-bold py-2 text-center mb-6 rounded-lg shadow-md">
-      🎉 Solo per i primi 50 utenti: Premium a Vita a 4,99€ per sempre! 🎉
-    </div>
-
-    <!-- Pulsanti navigazione -->
-    <div class="flex space-x-4 mb-6">
-      <button 
-        @click="goHome"
-        class="bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-xl transition">
-        🏠 Home
+    <div class="premium-actions">
+      <button class="btn" :disabled="loading !== 'none'" @click="goMonthly">
+        {{ loading === 'monthly' ? 'Reindirizzamento...' : 'Abbonati mensile (1,99€)' }}
       </button>
-      <button 
-        @click="goDashboard"
-        class="bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-xl transition">
-        📊 Dashboard
+
+      <button class="btn" :disabled="loading !== 'none'" @click="goLifetime">
+        {{ loading === 'lifetime' ? 'Reindirizzamento...' : 'Premium a vita (4,99€)' }}
       </button>
     </div>
-
-    <h1 class="text-3xl font-bold mb-8 text-center">Passa a Premium</h1>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl">
-      <!-- Card Premium Lifetime -->
-      <div class="bg-gray-800 rounded-2xl shadow-lg p-6 flex flex-col items-center justify-between">
-        <h2 class="text-2xl font-bold mb-4">Premium a Vita</h2>
-        <p class="text-4xl font-extrabold mb-4">€4,99</p>
-        <p class="text-gray-300 mb-6">Un unico pagamento per sempre.</p>
-        <button 
-          @click="checkoutLifetime"
-          class="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold py-3 px-6 rounded-xl transition">
-          Attiva Premium a Vita
-        </button>
-      </div>
-
-      <!-- Card Premium Mensile -->
-      <div class="bg-gray-800 rounded-2xl shadow-lg p-6 flex flex-col items-center justify-between">
-        <h2 class="text-2xl font-bold mb-4">Premium Mensile</h2>
-        <p class="text-4xl font-extrabold mb-4">€1,99 <span class="text-lg">/mese</span></p>
-        <p class="text-gray-300 mb-6">Paghi solo quando ti serve.</p>
-        <button 
-          @click="checkoutMonthly"
-          class="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold py-3 px-6 rounded-xl transition">
-          Attiva Premium Mensile
-        </button>
-      </div>
-    </div>
-
-    <!-- Footer -->
-    <footer class="mt-12 text-gray-400 text-sm text-center">
-      © 2025 FantaCoach AI — Tutti i diritti riservati ⚽
-    </footer>
   </div>
 </template>
 
-<script setup>
-import { useRouter } from 'vue-router'
-
-const router = useRouter()
-const API_URL = "http://localhost:3000"  // 👉 cambia con dominio backend in produzione
-
-// Navigazione
-const goHome = () => {
-  router.push("/")       // route Home
+<style scoped>
+.premium {
+  text-align: center;
+  padding: 2rem;
 }
-const goDashboard = () => {
-  router.push("/dashboard")  // route Dashboard
+.premium-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
 }
-
-// Checkout Lifetime
-const checkoutLifetime = async () => {
-  try {
-    const res = await fetch(`${API_URL}/api/checkout/lifetime`, {
-      method: "POST",
-      headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
-    })
-    const data = await res.json()
-    if (data.url) {
-      window.location.href = data.url
-    } else {
-      console.error("❌ Errore checkout Lifetime:", data)
-      alert("Errore nel checkout Premium a Vita")
-    }
-  } catch (err) {
-    console.error("❌ Errore rete Lifetime:", err)
-    alert("Errore di connessione al server")
-  }
+.btn {
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  background: #ffd700;
+  color: #111;
+  transition: 0.2s;
 }
-
-// Checkout Mensile
-const checkoutMonthly = async () => {
-  try {
-    const res = await fetch(`${API_URL}/api/checkout/monthly`, {
-      method: "POST",
-      headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
-    })
-    const data = await res.json()
-    if (data.url) {
-      window.location.href = data.url
-    } else {
-      console.error("❌ Errore checkout Mensile:", data)
-      alert("Errore nel checkout Premium Mensile")
-    }
-  } catch (err) {
-    console.error("❌ Errore rete Mensile:", err)
-    alert("Errore di connessione al server")
-  }
+.btn:hover:not([disabled]) {
+  background: #ffcc00;
 }
-</script>
+.btn[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+</style>
